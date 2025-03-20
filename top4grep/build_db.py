@@ -14,7 +14,13 @@ logger = new_logger("DB")
 logger.setLevel('WARNING')
 
 CONFERENCES = ["NDSS", "IEEE S&P", "USENIX", "CCS"]
-NAME_MAP = {
+NAME_TO_CONF = {
+        "NDSS": "ndss",
+        "IEEE S&P": "sp",
+        "USENIX": "uss",
+        "CCS": "ccs",
+        }
+NAME_TO_ORG = {
         "NDSS": "ndss",
         "IEEE S&P": "sp",
         "USENIX": "uss",
@@ -43,7 +49,8 @@ def paper_exist(conf, year, title, authors, abstract):
 
 def get_papers(name, year, build_abstract):
     cnt = 0
-    conf = NAME_MAP[name]
+    org = NAME_TO_ORG[name]
+    conf = NAME_TO_CONF[name]
 
     if build_abstract and name == "NDSS" and (year == 2018 or year == 2016):
         logger.warning(f"Skipping the abstract for NDSS {year} becuase the website does not contain abstracts.")
@@ -51,7 +58,7 @@ def get_papers(name, year, build_abstract):
     else:
         extract_abstract = build_abstract
     try:
-        r = requests.get(f"https://dblp.org/db/conf/{conf}/{conf}{year}.html")
+        r = requests.get(f"https://dblp.org/db/conf/{org}/{conf}{year}.html")
         assert r.status_code == 200
 
         html = BeautifulSoup(r.text, 'html.parser')
