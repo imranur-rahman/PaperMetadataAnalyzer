@@ -39,25 +39,27 @@ def fuzzy_match(title):
 def existed_in_tokens(tokens, keywords):
     return all(map(lambda k: stemmer.stem(k.lower()) in tokens, keywords))
 
-def grep(keywords, abstract):
+def grep(keywords, abstract, start_year=2000):
     # TODO: currently we only grep either from title or from abstract, also grep from other fields in the future maybe?
     if abstract:
         constraints = [Paper.abstract.contains(x) for x in keywords]
+        constraints.append(Paper.year >= start_year)
         with Session() as session:
             papers = session.query(Paper).filter(*constraints).all()
         filter_paper = filter(lambda p: existed_in_tokens(fuzzy_match(p.abstract.lower()), keywords), papers)
     else:
         constraints = [Paper.title.contains(x) for x in keywords]
+        constraints.append(Paper.year >= start_year)
         with Session() as session:
             papers = session.query(Paper).filter(*constraints).all()
-        #check whether whether nltk tokenizer data is downloaded
+        #check whether nltk tokenizer data is downloaded
         check_and_download_punkt()
         #tokenize the title and filter out the substring matches
         filter_paper = []
         for paper in papers:
             if all([stemmer.stem(x.lower()) in fuzzy_match(paper.title.lower()) for x in keywords]):
                 filter_paper.append(paper)
-    # perform customized sorthing
+    # perform customized sorting
     papers = sorted(filter_paper, key=lambda paper: paper.year + CONFERENCES.index(paper.conference)/10, reverse=True)
     return papers
 
@@ -75,6 +77,8 @@ def main():
     parser.add_argument('--abstract', action="store_true", help="Involve abstract into the database's building or query (Need Chrome for building)")
     parser.add_argument('--conference-type', type=str, choices=['security', 'software_engineering', 'all'],
                         default='all', help="Type of conferences to process")
+    parser.add_argument('--start-year', type=int, default=2000, 
+                        help="Start year for paper search (default: 2000)")
     args = parser.parse_args()
 
     if args.k:
@@ -85,8 +89,8 @@ def main():
         else:
             logger.warning("No keyword is provided. Return all the papers.")
 
-        papers = grep(keywords, args.abstract)
-        logger.debug(f"Found {len(papers)} papers")
+        papers = grep(keywords, args.abstract, args.start_year)
+        logger.debug(f"Found {len(papers)} papers from year {args.start_year} onwards")
 
         show_papers(papers)
     elif args.build_db:
