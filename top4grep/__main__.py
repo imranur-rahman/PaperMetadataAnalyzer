@@ -1,4 +1,3 @@
-
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 from nltk import download, word_tokenize
@@ -6,7 +5,7 @@ from nltk.data import find
 from nltk.stem import PorterStemmer
 
 from .db import Base, Paper
-from .build_db import build_db, DB_PATH
+from .build_db import build_db, DB_PATH, CONFERENCE_CATEGORIES
 from .utils import new_logger
 import argparse
 
@@ -19,7 +18,7 @@ Session = sessionmaker(bind=engine)
 logger = new_logger("Top4Grep")
 stemmer = PorterStemmer()
 
-CONFERENCES = ["NDSS", "IEEE S&P", "USENIX", "CCS"]
+CONFERENCES = CONFERENCE_CATEGORIES["all"]
 
 # Function to check and download 'punkt' if not already available
 def check_and_download_punkt():
@@ -74,6 +73,8 @@ def main():
     parser.add_argument('-k', type=str, help="keywords to grep, separated by ','. For example, 'linux,kernel,exploit'", default='')
     parser.add_argument('--build-db', action="store_true", help="Builds the database of conference papers")
     parser.add_argument('--abstract', action="store_true", help="Involve abstract into the database's building or query (Need Chrome for building)")
+    parser.add_argument('--conference-type', type=str, choices=['security', 'software_engineering', 'all'],
+                        default='all', help="Type of conferences to process")
     args = parser.parse_args()
 
     if args.k:
@@ -89,8 +90,8 @@ def main():
 
         show_papers(papers)
     elif args.build_db:
-        print("Building db...")
-        build_db(args.abstract)
+        print(f"Building db for {args.conference_type} conferences...")
+        build_db(args.abstract, args.conference_type)
 
 
 if __name__ == "__main__":

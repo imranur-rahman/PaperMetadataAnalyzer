@@ -1,8 +1,8 @@
 # top4grep
-A grep tool for the top 4 security conferences
+A tool for searching papers from top security and software engineering conferences
 
 ## Installation
-```
+```bash
 git clone https://github.com/Kyle-Kyle/top4grep
 cd top4grep
 pip3 install -e .
@@ -10,20 +10,31 @@ pip3 install -e .
 
 ## Usage 
 ### Database Initialization
-If you want to update the papers stored in `papers.db`, you can recreate it with:
+Build the paper database with optional conference type selection or update the database of papers stored in `papers.db`:
+
 ```bash
+# Build database for all conferences (default)
 top4grep --build-db
+
+# Build database for security conferences only
+top4grep --build-db --conference-type security
+
+# Build database for software engineering conferences only
+top4grep --build-db --conference-type software_engineering
 ```
 
-Which will build the db wherever you run it.
+Supported conferences:
+- Security: NDSS, IEEE S&P, USENIX, CCS
+- Software Engineering: ICSE, FSE, ASE, ISSTA
 
 ### Query
 ```bash
-top4grep -k <kerywords>
+top4grep -k <keywords>
 ```
 
-For example, `python top4grep.py -k linux,kernel`
-Currently, the query is just a case-insensitive match (just like grep). The returned results must contains all the input keywords (papers containing keyword1 AND keyword2 AND ...). Support for `OR` operation (papers containing keyword1 OR keyword2) is missing, but will be added in the future.
+For example: `top4grep -k linux,kernel`
+
+The query performs a case-insensitive match (like grep). The returned results must contain all input keywords (papers containing keyword1 AND keyword2 AND ...). Support for `OR` operation (papers containing keyword1 OR keyword2) is planned for future updates.
 
 ## Screenshot
 ![screenshot](https://raw.githubusercontent.com/Kyle-Kyle/top4grep/master/img/screenshot.png)

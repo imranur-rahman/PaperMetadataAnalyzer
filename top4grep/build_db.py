@@ -13,19 +13,44 @@ from .abstract import Abstracts
 logger = new_logger("DB")
 logger.setLevel('WARNING')
 
-CONFERENCES = ["NDSS", "IEEE S&P", "USENIX", "CCS"]
+# Conference categories
+SECURITY_CONFERENCES = ["NDSS", "IEEE S&P", "USENIX", "CCS"]
+SE_CONFERENCES = ["ICSE", "FSE", "ASE", "ISSTA"]
+
+# Conference mapping dictionary
+CONFERENCE_CATEGORIES = {
+    "security": SECURITY_CONFERENCES,
+    "software_engineering": SE_CONFERENCES,
+    "all": SECURITY_CONFERENCES + SE_CONFERENCES
+}
+
+# Update conference mappings
 NAME_TO_CONF = {
-        "NDSS": "ndss",
-        "IEEE S&P": "sp",
-        "USENIX": "uss",
-        "CCS": "ccs",
-        }
+    # Security conferences
+    "NDSS": "ndss",
+    "IEEE S&P": "sp",
+    "USENIX": "uss",
+    "CCS": "ccs",
+    # Software Engineering conferences
+    "ICSE": "icse",
+    "FSE": "fse",
+    "ASE": "ase",
+    "ISSTA": "issta"
+}
+
 NAME_TO_ORG = {
-        "NDSS": "ndss",
-        "IEEE S&P": "sp",
-        "USENIX": "uss",
-        "CCS": "ccs",
-        }
+    # Security conferences
+    "NDSS": "ndss",
+    "IEEE S&P": "sp",
+    "USENIX": "uss",
+    "CCS": "ccs",
+    # Software Engineering conferences
+    "ICSE": "icse",
+    "FSE": "sigsoft",
+    "ASE": "kbse",
+    "ISSTA": "issta"
+}
+
 PACKAGE_DIR = Path(__file__).resolve().parent
 DB_PATH = PACKAGE_DIR / "data" / "papers.db"
 
@@ -80,7 +105,17 @@ def get_papers(name, year, build_abstract):
     logger.debug(f"Found {cnt} papers at {name}-{year}...")
 
 
-def build_db(build_abstract):
-    for conf in CONFERENCES:
+def build_db(build_abstract, conference_type="all"):
+    """
+    Build database for selected conference type
+    Args:
+        build_abstract (bool): Whether to build abstracts
+        conference_type (str): Type of conferences to process ('security', 'software_engineering', or 'all')
+    """
+    if conference_type not in CONFERENCE_CATEGORIES:
+        raise ValueError(f"Invalid conference type. Choose from: {list(CONFERENCE_CATEGORIES.keys())}")
+    
+    conferences = CONFERENCE_CATEGORIES[conference_type]
+    for conf in conferences:
         for year in range(2000, datetime.now().year+1):
             get_papers(conf, year, build_abstract)
