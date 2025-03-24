@@ -41,6 +41,7 @@ def existed_in_tokens(tokens, keywords):
 
 def grep(keywords, abstract, start_year=2000):
     # TODO: currently we only grep either from title or from abstract, also grep from other fields in the future maybe?
+    # TODO: convert the pdf to markdown using markitdown and store the markdown in the database?
     if abstract:
         constraints = [Paper.abstract.contains(x) for x in keywords]
         constraints.append(Paper.year >= start_year)

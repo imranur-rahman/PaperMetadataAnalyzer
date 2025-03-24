@@ -15,7 +15,7 @@ logger.setLevel('WARNING')
 
 # Conference categories
 SECURITY_CONFERENCES = ["NDSS", "IEEE S&P", "USENIX", "CCS"]
-SE_CONFERENCES = ["ICSE", "FSE", "ASE", "ISSTA"]
+SE_CONFERENCES = ["ICSE", "FSE", "ASE", "ISSTA", "TSE"]
 
 # Conference mapping dictionary
 CONFERENCE_CATEGORIES = {
@@ -31,11 +31,12 @@ NAME_TO_CONF = {
     "IEEE S&P": "sp",
     "USENIX": "uss",
     "CCS": "ccs",
-    # Software Engineering conferences
+    # Software Engineering conferences and journals
     "ICSE": "icse",
     "FSE": "fse",
     "ASE": "ase",
-    "ISSTA": "issta"
+    "ISSTA": "issta",
+    "TSE": "tse"  # IEEE Transactions on Software Engineering
 }
 
 NAME_TO_ORG = {
@@ -44,12 +45,16 @@ NAME_TO_ORG = {
     "IEEE S&P": "sp",
     "USENIX": "uss",
     "CCS": "ccs",
-    # Software Engineering conferences
+    # Software Engineering conferences and journals
     "ICSE": "icse",
     "FSE": "sigsoft",
     "ASE": "kbse",
-    "ISSTA": "issta"
+    "ISSTA": "issta",
+    "TSE": "tse"
 }
+
+# Add journal information
+JOURNALS = {"TSE"}
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 DB_PATH = PACKAGE_DIR / "data" / "papers.db"
@@ -78,16 +83,25 @@ def get_papers(name, year, build_abstract):
     conf = NAME_TO_CONF[name]
 
     if build_abstract and name == "NDSS" and (year == 2018 or year == 2016):
-        logger.warning(f"Skipping the abstract for NDSS {year} becuase the website does not contain abstracts.")
+        logger.warning(f"Skipping the abstract for NDSS {year} because the website does not contain abstracts.")
         extract_abstract = False
     else:
         extract_abstract = build_abstract
     try:
-        r = requests.get(f"https://dblp.org/db/conf/{org}/{conf}{year}.html")
+        if name in JOURNALS:
+            # Calculate volume number for TSE based on year
+            # 2000 -> volume 26, 2025 -> volume 51
+            volume_no = year - 1974  # 2000 - 1974 = 26
+            url = f"https://dblp.org/db/journals/{org}/{conf}{volume_no}.html"
+        else:
+            url = f"https://dblp.org/db/conf/{org}/{conf}{year}.html"
+
+        r = requests.get(url)
         assert r.status_code == 200
 
         html = BeautifulSoup(r.text, 'html.parser')
-        paper_htmls = html.find_all("li", {'class': "inproceedings"})
+        # Update to handle both conference and journal papers
+        paper_htmls = html.find_all("li", {'class': ["inproceedings", "article"]})
         for paper_html in paper_htmls:
             title = paper_html.find('span', {'class': 'title'}).text
             authors = [x.text for x in paper_html.find_all('span', {'itemprop': 'author'})]
