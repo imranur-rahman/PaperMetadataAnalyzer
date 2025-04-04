@@ -23,13 +23,13 @@ CONFERENCES = CONFERENCE_CATEGORIES["all"]
 # Function to check and download 'punkt' if not already available
 def check_and_download_punkt():
     try:
-        # Check if 'punkt' is available, this will raise a LookupError if not found
-        find('tokenizers/punkt')
+        # Check if 'punkt_tab' is available, this will raise a LookupError if not found
+        find('tokenizers/punkt_tab')
         #print("'punkt' tokenizer models are already installed.")
     except LookupError:
-        print("'punkt' tokenizer models not found. Downloading...")
+        print("'punkt_tab' tokenizer models not found. Downloading...")
         # Download 'punkt' tokenizer models
-        download('punkt')
+        download('punkt_tab')
         
 # trim word tokens from tokenizer to stem i.e. exploiting to exploit
 def fuzzy_match(title):

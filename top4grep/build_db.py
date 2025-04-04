@@ -58,6 +58,7 @@ JOURNALS = {"TSE"}
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 DB_PATH = PACKAGE_DIR / "data" / "papers.db"
+DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 engine = sqlalchemy.create_engine(f'sqlite:///{str(DB_PATH)}')
 Base.metadata.create_all(engine)
