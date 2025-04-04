@@ -39,18 +39,24 @@ def fuzzy_match(title):
 def existed_in_tokens(tokens, keywords):
     return all(map(lambda k: stemmer.stem(k.lower()) in tokens, keywords))
 
-def grep(keywords, abstract, start_year=2000):
+def grep(keywords, abstract, start_year=2000, conference_type='all'):
     # TODO: currently we only grep either from title or from abstract, also grep from other fields in the future maybe?
     # TODO: convert the pdf to markdown using markitdown and store the markdown in the database?
+    
+    # Get conferences based on type
+    conferences = CONFERENCE_CATEGORIES[conference_type]
+    
     if abstract:
         constraints = [Paper.abstract.contains(x) for x in keywords]
         constraints.append(Paper.year >= start_year)
+        constraints.append(Paper.conference.in_(conferences))  # Add conference filter
         with Session() as session:
             papers = session.query(Paper).filter(*constraints).all()
         filter_paper = filter(lambda p: existed_in_tokens(fuzzy_match(p.abstract.lower()), keywords), papers)
     else:
         constraints = [Paper.title.contains(x) for x in keywords]
         constraints.append(Paper.year >= start_year)
+        constraints.append(Paper.conference.in_(conferences))  # Add conference filter
         with Session() as session:
             papers = session.query(Paper).filter(*constraints).all()
         #check whether nltk tokenizer data is downloaded
@@ -61,7 +67,7 @@ def grep(keywords, abstract, start_year=2000):
             if all([stemmer.stem(x.lower()) in fuzzy_match(paper.title.lower()) for x in keywords]):
                 filter_paper.append(paper)
     # perform customized sorting
-    papers = sorted(filter_paper, key=lambda paper: paper.year + CONFERENCES.index(paper.conference)/10, reverse=True)
+    papers = sorted(filter_paper, key=lambda paper: paper.year + conferences.index(paper.conference)/10, reverse=True)
     return papers
 
 
@@ -90,7 +96,7 @@ def main():
         else:
             logger.warning("No keyword is provided. Return all the papers.")
 
-        papers = grep(keywords, args.abstract, args.start_year)
+        papers = grep(keywords, args.abstract, args.start_year, args.conference_type)
         logger.debug(f"Found {len(papers)} papers from year {args.start_year} onwards")
 
         show_papers(papers)
