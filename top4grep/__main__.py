@@ -88,9 +88,15 @@ def main():
                         help="Start year for paper search (default: 2000)")
     args = parser.parse_args()
 
-    if args.k:
+    if args.build_db:
+        print(f"Building db for {args.conference_type} conferences...")
+        build_db(args.abstract, args.conference_type)
+    else:
         assert DB_PATH.exists(), f"need to build a paper database first to perform wanted queries"
         keywords = [x.strip() for x in args.k.split(',')]
+        # Remove empty strings from keywords list
+        keywords = [k for k in keywords if k]
+        
         if keywords:
             logger.info("Grep based on the following keywords: %s", ', '.join(keywords))
         else:
@@ -98,11 +104,7 @@ def main():
 
         papers = grep(keywords, args.abstract, args.start_year, args.conference_type)
         logger.debug(f"Found {len(papers)} papers from year {args.start_year} onwards")
-
         show_papers(papers)
-    elif args.build_db:
-        print(f"Building db for {args.conference_type} conferences...")
-        build_db(args.abstract, args.conference_type)
 
 
 if __name__ == "__main__":

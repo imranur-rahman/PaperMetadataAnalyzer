@@ -40,6 +40,10 @@ top4grep -k linux,kernel
 # Search for papers from 2015 onwards
 top4grep -k linux,kernel --start-year 2015
 ```
+To return all paper titles, don't include the k argument.
+```bash
+top4grep --start-year 2010 --conference-type software_engineering
+```
 
 The query performs a case-insensitive match (like grep). The returned results must contain all input keywords (papers containing keyword1 AND keyword2 AND ...). Support for `OR` operation (papers containing keyword1 OR keyword2) is planned for future updates.
 
