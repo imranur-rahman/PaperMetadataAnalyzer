@@ -7,6 +7,7 @@ from nltk.stem import PorterStemmer
 from .db import Base, Paper
 from .build_db import build_db, DB_PATH, CONFERENCE_CATEGORIES
 from .utils import new_logger
+from .tpms_matcher import match_reviewers
 import argparse
 
 
@@ -86,11 +87,19 @@ def main():
                         default='all', help="Type of conferences to process")
     parser.add_argument('--start-year', type=int, default=2000, 
                         help="Start year for paper search (default: 2000)")
+    parser.add_argument('--match-reviewers', nargs=2, metavar=('CFP_URL', 'PDF_PATH'),
+                        help="Match potential reviewers for a paper submission. Requires CFP URL and PDF path.")
     args = parser.parse_args()
 
     if args.build_db:
         print(f"Building db for {args.conference_type} conferences...")
         build_db(args.abstract, args.conference_type)
+    elif args.match_reviewers:
+        cfp_url, pdf_path = args.match_reviewers
+        print(f"Matching reviewers for submission: {pdf_path}")
+        print(f"Using CFP URL: {cfp_url}")
+        ranked_reviewers = match_reviewers(cfp_url, pdf_path)
+        print(f"\nFound {len(ranked_reviewers)} potential reviewers.")
     else:
         assert DB_PATH.exists(), f"need to build a paper database first to perform wanted queries"
         keywords = [x.strip() for x in args.k.split(',')]
