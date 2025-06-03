@@ -121,19 +121,51 @@ def extract_pc_members(cfp_url):
 # ----------- Step 2: Fetch Publications ----------- #
 def fetch_dblp_publications(author_name):
     query = author_name.replace(" ", "+")
-    resp = requests.get(DBLP_SEARCH_API.format(query))
-    if resp.status_code != 200:
-        return []
-    data = resp.json()
-    hits = data.get("result", {}).get("hits", {}).get("hit", [])
-
     all_papers = []
-    for hit in hits:
-        info = hit.get("info", {})
-        year = info.get("year")
-        title = info.get("title")
-        if year and title:
-            all_papers.append((title, int(year)))
+    hits_per_page = 1000  # Maximum allowed by DBLP
+    first_result = 0
+    
+    print(f"Fetching publications for {author_name}...")
+    
+    while True:
+        # Add pagination parameters
+        url = f"{DBLP_SEARCH_API}&h={hits_per_page}&f={first_result}".format(query)
+        resp = requests.get(url)
+        
+        if resp.status_code != 200:
+            print(f"Error fetching publications for {author_name}: {resp.status_code}")
+            print(resp.text)
+            break
+            
+        data = resp.json()
+        result = data.get("result", {})
+        hits = result.get("hits", {}).get("hit", [])
+        
+        if not hits:
+            break
+            
+        # Process current batch
+        for hit in hits:
+            info = hit.get("info", {})
+            year = info.get("year")
+            title = info.get("title")
+            if year and title:
+                all_papers.append((title, int(year)))
+        
+        # Check if we got all results
+        total_hits = int(result.get("hits", {}).get("@total", "0"))
+        first_result += len(hits)
+        
+        print(f"Fetched {first_result}/{total_hits} publications for {author_name}")
+        
+        # Break if we've fetched all results
+        if first_result >= total_hits:
+            break
+            
+        # Add a small delay to be respectful to DBLP
+        time.sleep(0.5)
+    
+    print(f"Found {len(all_papers)} total publications for {author_name}")
     return all_papers
 
 # ----------- Step 3: Build Reviewer Profiles ----------- #
@@ -199,7 +231,7 @@ def match_reviewers(cfp_url, submission_pdf):
     print("Extracting PC members...")
     pc_list = extract_pc_members(cfp_url)
     print(f"Found {len(pc_list)} PC members")
-    print(json.dumps(pc_list, indent=2))
+    # print(json.dumps(pc_list, indent=2))
 
     print("Building reviewer profiles...")
     profiles = build_reviewer_profiles(pc_list)
